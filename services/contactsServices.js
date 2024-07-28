@@ -2,6 +2,8 @@ import fs from "fs/promises";
 import path from "path";
 import crypto from "crypto";
 
+import HttpError from "../helpers/HttpError.js";
+
 const contactsPath = path.resolve("db/contacts.json");
 
 export async function listContacts() {
@@ -10,7 +12,7 @@ export async function listContacts() {
 
     return JSON.parse(allContacts);
   } catch (error) {
-    console.log(error);
+    throw error;
   }
 }
 
@@ -20,9 +22,13 @@ export async function getContactById(contactId) {
 
     const foundContact = allContacts.find(({ id }) => id === contactId);
 
-    return foundContact ?? null;
+    if (!foundContact) {
+      throw HttpError(404);
+    }
+
+    return foundContact;
   } catch (error) {
-    console.log(error);
+    throw error;
   }
 }
 
@@ -32,13 +38,17 @@ export async function removeContactById(contactId) {
 
     const contact = allContacts.find(({ id }) => id === contactId);
 
-    if (!contact) return null;
+    if (!contact) {
+      throw HttpError(404);
+    }
 
     const filteredContacts = allContacts.filter(({ id }) => id !== contact.id);
 
     await fs.writeFile(contactsPath, JSON.stringify(filteredContacts, null, 2));
+
+    return contact;
   } catch (error) {
-    console.log(error);
+    throw error;
   }
 }
 
@@ -59,7 +69,7 @@ export async function addContact({ name, email, phone }) {
 
     return newContact;
   } catch (error) {
-    console.log(error);
+    throw error;
   }
 }
 
@@ -69,7 +79,9 @@ export async function updateContactById(id, data) {
 
     const index = allContacts.findIndex((contact) => contact.id === id);
 
-    if (index === -1) return null;
+    if (index === -1) {
+      throw HttpError(404);
+    }
 
     allContacts[index] = { ...allContacts[index], ...data };
 
@@ -77,6 +89,6 @@ export async function updateContactById(id, data) {
 
     return allContacts[index];
   } catch (error) {
-    console.log(error);
+    throw error;
   }
 }

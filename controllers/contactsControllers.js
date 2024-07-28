@@ -6,49 +6,47 @@ import {
   updateContactById,
 } from "../services/contactsServices.js";
 
-import HttpError from "../helpers/HttpError.js";
+export const getAllContacts = async (req, res, next) => {
+  try {
+    const contactsList = await listContacts();
 
-export const getAllContacts = async (req, res) => {
-  const contactsList = await listContacts();
-
-  res.status(200).json(contactsList);
-};
-
-export const getContact = async (req, res) => {
-  const foundedContact = await getContactById(req?.params?.id);
-
-  if (!foundedContact) {
-    const { status, message } = HttpError(404);
-    res.status(status).json({ message });
+    res.status(200).json(contactsList);
+  } catch (error) {
+    next(error);
   }
-
-  return res.status(200).json(foundedContact);
 };
 
-export const removeContact = async (req, res) => {
-  const { id } = req.params;
+export const getContact = async (req, res, next) => {
+  try {
+    const foundedContact = await getContactById(req?.params?.id);
 
-  const removedContact = await removeContactById(id);
+    return res.status(200).json(foundedContact);
+  } catch (error) {
+    next(error);
+  }
+};
 
-  if (removedContact) {
+export const removeContact = async (req, res, next) => {
+  try {
+    const removedContact = await removeContactById(req.params.id);
+
     return res.status(200).json(removedContact);
+  } catch (error) {
+    next(error);
   }
-  const { status, message } = HttpError(404);
-  res.status(status).json({ message });
 };
 
-export const createContact = async (req, res) => {
+export const createContact = async (req, res, next) => {
   try {
     const addedContact = await addContact(req.body);
 
     res.status(201).json(addedContact);
   } catch (error) {
-    const { status, message } = HttpError(400, error.message);
-    res.status(status).json({ message });
+    next(error);
   }
 };
 
-export const updateContact = async (req, res) => {
+export const updateContact = async (req, res, next) => {
   try {
     if (Object.keys(req.body).length === 0) {
       return res
@@ -58,15 +56,8 @@ export const updateContact = async (req, res) => {
 
     const updatedContact = await updateContactById(req.params.id, req.body);
 
-    if (updatedContact) {
-      return res.status(200).json(updatedContact);
-    }
-
-    const { status, message } = HttpError(404);
-
-    res.status(status).json({ message });
+    return res.status(200).json(updatedContact);
   } catch (error) {
-    const { status, message } = HttpError(400, error.message);
-    res.status(status).json({ status, message });
+    next(error);
   }
 };
