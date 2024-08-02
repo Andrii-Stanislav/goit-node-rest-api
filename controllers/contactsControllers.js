@@ -5,6 +5,7 @@ import {
   addContact,
   updateContactById,
 } from "../services/contactsServices.js";
+import { HttpError } from "../helpers/HttpError.js";
 
 export const getAllContacts = async (req, res, next) => {
   try {
@@ -19,6 +20,10 @@ export const getAllContacts = async (req, res, next) => {
 export const getContact = async (req, res, next) => {
   try {
     const foundedContact = await getContactById(req?.params?.id);
+
+    if (!foundedContact) {
+      throw HttpError(404);
+    }
 
     return res.status(200).json(foundedContact);
   } catch (error) {
