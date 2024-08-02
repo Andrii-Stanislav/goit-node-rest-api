@@ -48,12 +48,6 @@ export const createContact = async (req, res, next) => {
 
 export const updateContact = async (req, res, next) => {
   try {
-    if (Object.keys(req.body).length === 0) {
-      return res
-        .status(400)
-        .json({ message: "Body must have at least one field" });
-    }
-
     const updatedContact = await updateContactById(req.params.id, req.body);
 
     return res.status(200).json(updatedContact);

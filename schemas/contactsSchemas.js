@@ -1,6 +1,6 @@
 import Joi from "joi";
 
-const phoneReg = /^\(\d{3}\) \d{3}-\d{4}$/;
+import { phoneReg } from "../constants/regexp.js";
 
 export const createContactSchema = Joi.object({
   name: Joi.string().required(),
