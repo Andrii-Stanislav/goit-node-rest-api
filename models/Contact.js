@@ -1,36 +1,39 @@
-import { Schema, model } from "mongoose";
-import { handleSaveErrors, setUpdateSettings } from "./hooks.js";
+import { DataTypes } from "sequelize";
 
-const contactSchema = new Schema(
+import { sequelize } from "./_db.js";
+import { User } from "./User.js";
+
+export const Contact = sequelize.define(
+  "contact",
   {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
     name: {
-      type: String,
-      minlength: 3,
-      maxlength: 30,
-      required: [true, "Set name for contact"],
+      type: DataTypes.STRING,
+      allowNull: false,
     },
     email: {
-      type: String,
-      required: true,
+      type: DataTypes.STRING,
+      allowNull: false,
     },
     phone: {
-      type: String,
-      required: true,
+      type: DataTypes.STRING,
+      allowNull: false,
     },
     favorite: {
-      type: Boolean,
-      default: false,
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
     },
     owner: {
-      type: Schema.Types.ObjectId,
-      ref: "user",
+      type: DataTypes.INTEGER,
+      references: {
+        model: User,
+        key: "id",
+      },
     },
   },
-  { versionKey: false, timestamps: true }
+  { timestamps: true, version: false }
 );
-
-contactSchema.post("save", handleSaveErrors);
-contactSchema.pre("findOneAndUpdate", setUpdateSettings);
-contactSchema.post("findOneAndUpdate", handleSaveErrors);
-
-export const Contact = model("contact", contactSchema);
