@@ -8,13 +8,13 @@ export async function saveUser(data) {
 }
 
 export async function findUserByEmail(email) {
-  return await User.findOne({ email });
+  return await User.findOne({ where: { email } });
 }
 
 export async function findUserById(id) {
-  return await User.findOne({ _id: id });
+  return await User.findByPk(id);
 }
 
 export async function updateUserById(id, data) {
-  return await User.findOneAndUpdate({ _id: id }, data);
+  return await User.update(data, { where: { id } });
 }

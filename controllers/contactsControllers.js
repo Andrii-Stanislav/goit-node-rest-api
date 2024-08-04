@@ -9,7 +9,9 @@ import { HttpError } from "../helpers/HttpError.js";
 
 export const getAllContacts = async (req, res, next) => {
   try {
-    const contactsList = await listContacts();
+    const { id } = req.user;
+
+    const contactsList = await listContacts(id);
 
     res.status(200).json(contactsList);
   } catch (error) {
@@ -43,7 +45,9 @@ export const removeContact = async (req, res, next) => {
 
 export const createContact = async (req, res, next) => {
   try {
-    const addedContact = await addContact(req.body);
+    const { id } = req.user;
+
+    const addedContact = await addContact({ ...req.body, owner: id });
 
     res.status(201).json(addedContact);
   } catch (error) {
@@ -54,6 +58,10 @@ export const createContact = async (req, res, next) => {
 export const updateContact = async (req, res, next) => {
   try {
     const updatedContact = await updateContactById(req.params.id, req.body);
+
+    if (!updatedContact) {
+      throw HttpError(404);
+    }
 
     return res.status(200).json(updatedContact);
   } catch (error) {

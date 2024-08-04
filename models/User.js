@@ -1,35 +1,33 @@
-import { Schema, model } from "mongoose";
+import { DataTypes } from "sequelize";
 
-import { handleSaveErrors, setUpdateSettings } from "./hooks.js";
-import { emailRegexp } from "../constants/regexp.js";
+import { sequelize } from "./_db.js";
 
-const userSchema = new Schema(
+export const User = sequelize.define(
+  "user",
   {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
     email: {
-      type: String,
-      unique: true,
-      match: emailRegexp,
-      required: [true, "Email is required"],
+      type: DataTypes.STRING,
+      allowNull: false,
     },
     password: {
-      type: String,
-      required: [true, "Password is required"],
+      type: DataTypes.STRING,
+      allowNull: false,
     },
     subscription: {
-      type: String,
-      enum: ["starter", "pro", "business"],
-      default: "starter",
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: "starter",
     },
     token: {
-      type: String,
-      default: null,
+      type: DataTypes.STRING,
+      allowNull: true,
+      defaultValue: null,
     },
   },
-  { versionKey: false, timestamps: true }
+  { timestamps: true, version: false }
 );
-
-userSchema.post("save", handleSaveErrors);
-userSchema.pre("findOneAndUpdate", setUpdateSettings);
-userSchema.post("findOneAndUpdate", handleSaveErrors);
-
-export const User = model("user", userSchema);

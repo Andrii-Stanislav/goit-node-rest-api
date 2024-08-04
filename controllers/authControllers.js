@@ -38,7 +38,7 @@ export const signIn = async (req, res, next) => {
       throw HttpError(401, "Email or password is wrong");
     }
 
-    const id = user?._id;
+    const id = user?.id;
 
     const token = createToken({ id });
 
@@ -68,14 +68,14 @@ export const getCurrentUser = async (req, res, next) => {
 
 export const signOut = async (req, res, next) => {
   try {
-    const { _id } = req.user;
-    const user = await authServises.findUserById(_id);
+    const { id } = req.user;
+    const user = await authServises.findUserById(id);
 
     if (!user) {
       throw HttpError(401, "Not authorized");
     }
 
-    await authServises.updateUserById(_id, { token: null });
+    await authServises.updateUserById(id, { token: null });
 
     res.status(204).json();
   } catch (error) {
@@ -85,10 +85,10 @@ export const signOut = async (req, res, next) => {
 
 export const updateSubscription = async (req, res, next) => {
   try {
-    const { _id } = req.user;
+    const { id } = req.user;
     const { subscription } = req.body;
 
-    const result = await authServises.updateUserById(_id, { subscription });
+    const result = await authServises.updateUserById(id, { subscription });
 
     if (!result) {
       throw HttpError(400, "Missing field subscription");
