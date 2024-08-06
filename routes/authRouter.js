@@ -4,6 +4,7 @@ import * as authControllers from "../controllers/authControllers.js";
 import { isEmptyBody } from "../helpers/isEmptyBody.js";
 import { validateBody } from "../helpers/validateBody.js";
 import { authenticate } from "../middlewares/authenticate.js";
+import { upload } from "../middlewares/upload.js";
 
 import {
   authSignUpSchema,
@@ -31,11 +32,18 @@ authRouter.post("/logout", authenticate, authControllers.signOut);
 authRouter.get("/current", authenticate, authControllers.getCurrentUser);
 
 authRouter.patch(
-  "/",
+  "/subscription",
   authenticate,
   isEmptyBody,
   validateBody(subscriptionSchema),
   authControllers.updateSubscription
+);
+
+authRouter.patch(
+  "/avatar",
+  upload.single("avatar"),
+  authenticate,
+  authControllers.uploadAvatar
 );
 
 export default authRouter;
