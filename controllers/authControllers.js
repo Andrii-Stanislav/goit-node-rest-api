@@ -49,6 +49,7 @@ export const signIn = async (req, res, next) => {
       user: {
         email: email,
         subscription: user.subscription,
+        avatarURL: user.avatarURL,
       },
     });
   } catch (error) {
