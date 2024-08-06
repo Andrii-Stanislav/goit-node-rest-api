@@ -99,3 +99,19 @@ export const updateSubscription = async (req, res, next) => {
     next(error.message);
   }
 };
+
+export const uploadAvatar = async (req, res, next) => {
+  try {
+    const { file, user } = req;
+
+    if (!file) {
+      return res.status(400).send({ message: "Avatar image is required!" });
+    }
+
+    const { avatarURL } = await authServises.uploadAvatar(file, user.id);
+
+    return res.status(200).json({ avatarURL });
+  } catch (error) {
+    next(error);
+  }
+};
