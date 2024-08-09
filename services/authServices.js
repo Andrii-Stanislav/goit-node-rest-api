@@ -23,6 +23,10 @@ export async function findUserById(id) {
   return await User.findByPk(id);
 }
 
+export async function findUserByVerificationToken(token) {
+  return await User.findOne({ where: { verificationToken: token } });
+}
+
 export async function updateUserById(id, data) {
   const [_, updatedUser] = await User.update(data, {
     where: { id },

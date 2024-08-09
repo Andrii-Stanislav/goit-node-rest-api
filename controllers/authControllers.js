@@ -1,18 +1,31 @@
-import * as authServises from "../services/authServices.js";
+import { nanoid } from "nanoid";
+
+import * as authServices from "../services/authServices.js";
 import { HttpError } from "../helpers/HttpError.js";
 import { compareHash } from "../helpers/compareHash.js";
 import { createToken } from "../helpers/jwt.js";
+import { sendEmail, getVerifyEmailData } from "../helpers/sendEmail.js";
 
 export const signUp = async (req, res, next) => {
   try {
     const { email } = req.body;
-    const user = await authServises.findUserByEmail(email);
+
+    const user = await authServices.findUserByEmail(email);
 
     if (user) {
       throw HttpError(409, `Email ${email} in use`);
     }
 
-    const newUser = await authServises.saveUser(req.body);
+    const verificationToken = nanoid();
+
+    const newUser = await authServices.saveUser({
+      ...req.body,
+      verificationToken,
+    });
+
+    const verifyEmail = getVerifyEmailData({ email, verificationToken });
+
+    await sendEmail(verifyEmail);
 
     res.status(201).json({
       user: { email, subscription: newUser.subscription },
@@ -22,14 +35,62 @@ export const signUp = async (req, res, next) => {
   }
 };
 
+export const verifyUser = async (req, res) => {
+  const { verificationToken } = req.params;
+
+  const user = await authServices.findUserByVerificationToken(
+    verificationToken
+  );
+
+  if (!user) {
+    throw HttpError(404);
+  }
+
+  await authServices.updateUserById(user.id, {
+    verify: true,
+    verificationToken: null,
+  });
+
+  res.status(200).json({ message: "Verification successfull!" });
+};
+
+export const resendVerifyEmail = async (req, res) => {
+  const { email } = req.body;
+
+  const user = await authServices.findUserByEmail(email);
+
+  if (!user) {
+    throw HttpError(404);
+  }
+
+  if (user.verify) {
+    throw HttpError(400, "Verification has already been passed");
+  }
+
+  const verifyEmail = getVerifyEmailData({
+    email,
+    verificationToken: user.verificationToken,
+  });
+
+  await sendEmail(verifyEmail);
+
+  res.status(200).json({
+    message: "Verification email sent",
+  });
+};
+
 export const signIn = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    const user = await authServises.findUserByEmail(email);
+    const user = await authServices.findUserByEmail(email);
 
     if (!user) {
       throw HttpError(401, "Email or password is wrong");
+    }
+
+    if (!user.verify) {
+      throw HttpError(401, "Email is not verified");
     }
 
     const comparePassword = await compareHash(password, user.password);
@@ -42,7 +103,7 @@ export const signIn = async (req, res, next) => {
 
     const token = createToken({ id });
 
-    await authServises.updateUserById(id, { token });
+    await authServices.updateUserById(id, { token });
 
     res.status(200).json({
       token: token,
@@ -70,13 +131,13 @@ export const getCurrentUser = async (req, res, next) => {
 export const signOut = async (req, res, next) => {
   try {
     const { id } = req.user;
-    const user = await authServises.findUserById(id);
+    const user = await authServices.findUserById(id);
 
     if (!user) {
       throw HttpError(401, "Not authorized");
     }
 
-    await authServises.updateUserById(id, { token: null });
+    await authServices.updateUserById(id, { token: null });
 
     res.status(204).json();
   } catch (error) {
@@ -89,7 +150,7 @@ export const updateSubscription = async (req, res, next) => {
     const { id } = req.user;
     const { subscription } = req.body;
 
-    const result = await authServises.updateUserById(id, { subscription });
+    const result = await authServices.updateUserById(id, { subscription });
 
     if (!result) {
       throw HttpError(400, "Missing field subscription");
@@ -109,7 +170,7 @@ export const uploadAvatar = async (req, res, next) => {
       return res.status(400).send({ message: "Avatar image is required!" });
     }
 
-    const { avatarURL } = await authServises.uploadAvatar(file, user.id);
+    const { avatarURL } = await authServices.uploadAvatar(file, user.id);
 
     return res.status(200).json({ avatarURL });
   } catch (error) {
