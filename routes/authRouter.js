@@ -10,6 +10,7 @@ import {
   authSignUpSchema,
   authSignInSchema,
   subscriptionSchema,
+  resendVerifyEmailSchema,
 } from "../schemas/authSchemas.js";
 
 const authRouter = express.Router();
@@ -44,6 +45,15 @@ authRouter.patch(
   upload.single("avatar"),
   authenticate,
   authControllers.uploadAvatar
+);
+
+authRouter.get("/verify/:verificationToken", authControllers.verifyUser);
+
+authRouter.post(
+  "/verify",
+  isEmptyBody,
+  validateBody(resendVerifyEmailSchema),
+  authControllers.resendVerifyEmail
 );
 
 export default authRouter;
